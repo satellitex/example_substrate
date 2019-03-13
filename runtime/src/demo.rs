@@ -9,15 +9,12 @@
 /// https://github.com/paritytech/substrate/blob/gav-template/srml/example/src/lib.rs
 
 use support::{decl_module, decl_storage, decl_event, StorageValue, dispatch::Result};
-use system::ensure_signed;
+
+// Enables access to account balances and interacting with signed messages
+use {balance, system::{self, ensure_signed}};
 
 /// The module's configuration trait.
-pub trait Trait: system::Trait {
-	// TODO: Add other types and constants required configure this module.
-
-	/// The overarching event type.
-	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
-}
+pub trait Trait: balances::Trait {}
 
 /// This module's storage items.
 decl_storage! {
