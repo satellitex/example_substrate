@@ -174,9 +174,7 @@ impl sudo::Trait for Runtime {
 }
 
 /// Used for the module demo in `./demo.rs`
-impl demo::Trait for Runtime { 
-	type Event = Event;
-}
+impl demo::Trait for Runtime {}
 
 construct_runtime!(
 	pub enum Runtime with Log(InternalLog: DigestItem<Hash, Ed25519AuthorityId>) where
@@ -193,7 +191,7 @@ construct_runtime!(
 		Sudo: sudo,
 		Fees: fees::{Module, Storage, Config<T>, Event<T>},
 		// Used for the module demo in `./demo.rs`
-		DemoModule: demo::{Module, Call, Storage, Event<T>},
+		Demo: demo::{Module, Call, Storage},
 	}
 );
 

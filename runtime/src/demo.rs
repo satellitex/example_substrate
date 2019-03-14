@@ -1,51 +1,53 @@
 /// A runtime module template with necessary imports
 
-/// Feel free to remove or edit this file as needed.
-/// If you change the name of this file, make sure to update its references in runtime/src/lib.rs
-/// If you remove this file, you can remove those references
-
-
-/// For more guidance on Substrate modules, see the example module
-/// https://github.com/paritytech/substrate/blob/gav-template/srml/example/src/lib.rs
-
+use parity_codec::Encode;
+use runtime_primitives::traits::Hash;
 use support::{decl_module, decl_storage, decl_event, StorageValue, dispatch::Result};
 
 // Enables access to account balances and interacting with signed messages
-use {balance, system::{self, ensure_signed}};
+use {balances, system::{self, ensure_signed}};
 
 /// The module's configuration trait.
 pub trait Trait: balances::Trait {}
 
 /// This module's storage items.
 decl_storage! {
-	trait Store for Module<T: Trait> as demo {
-		// Just a dummy storage item. 
-		// Here we are declaring a StorageValue, `Something` as a Option<u32>
-		// `get(something)` is the default getter which returns either the stored `u32` or `None` if nothing stored
-		Something get(something): Option<u32>;
-	}
+    trait Store for Module<T: Trait> as Demo {
+        Payment get(payment): Option<T::Balance>;
+        Pot get(pot): T::Balance;
+    }
 }
 
 decl_module! {
 	/// The module declaration.
 	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-		// Initializing events
-		// this is needed only if you are using events in your module
-		fn deposit_event<T>() = default;
+	    fn play(origin) -> Result {
+	        let sender = ensure_signed(origin)?;
+			let payment = Self::payment().ok_or("Must have payment amount set")?;
 
-		// Just a dummy entry point.
-		// function that can be called by the external world as an extrinsics call
-		// takes a parameter of the type `AccountId`, stores it and emits an event
-		pub fn do_something(origin, something: u32) -> Result {
-			// TODO: You only need this if you want to check it was signed.
-			let who = ensure_signed(origin)?;
+            // == decrease_free_balance.
+            let balance = <balances::Module<T>>::free_balance(&sender);
+            <balances::Module<T>>::set_free_balance(&sender, balance - payment);
 
-			// TODO: Code to execute when something calls this.
-			// For example: the following line stores the passed in u32 in the storage
-			<Something<T>>::put(something);
+			if (<system::Module<T>>::random_seed(), &sender)
+				.using_encoded(<T as system::Trait>::Hashing::hash)
+				.using_encoded(|e| e[0] < 128)
+			{
+			    // == increase_free_balance
+			    let balance = <balances::Module<T>>::free_balance(&sender);
+				<balances::Module<T>>::set_free_balance(&sender, balance + <Pot<T>>::take());
+			}
 
-			// here we are raising the Something event
-			Self::deposit_event(RawEvent::SomethingStored(something, who));
+			<Pot<T>>::mutate(|pot| *pot += payment);
+
+			Ok(())
+	    }
+
+        fn set_payment(_origin, value: T::Balance) -> Result {
+            if Self::payment().is_none() {
+                <Payment<T>>::put(value);
+                <Pot<T>>::put(value);
+            }
 			Ok(())
 		}
 	}
