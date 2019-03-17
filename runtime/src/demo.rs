@@ -1,6 +1,6 @@
 /// A runtime module template with necessary imports
 use parity_codec::Encode;
-use runtime_primitives::traits::{Zero, Hash, CheckedAdd, CheckedSub};
+use runtime_primitives::traits::{CheckedAdd, CheckedSub, Hash, Zero};
 use support::{decl_module, decl_storage, dispatch::Result, StorageValue};
 
 // Enables access to account balances and interacting with signed messages
@@ -25,21 +25,21 @@ decl_module! {
     /// The module declaration.
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
         fn play(origin) -> Result {
-        	// sender を取得。
+            // sender を取得。
             let sender = ensure_signed(origin)?;
             // payment=(賭け金) はいくらかを取得。
             let payment = Self::payment().ok_or("Must have payment amount set")?;
 
-			// 乱数生成に使う nonce を取得。
+            // 乱数生成に使う nonce を取得。
             let mut nonce = Self::nonce();
             // pot に溜まっている balance を取得。
             let mut pot = Self::pot();
             // sender の持っている balance を取得。
             let mut sender_free_balance = <balances::Module<T>>::free_balance(&sender);
 
-			// sender が賭け金を持っているかをチェック。OKなら実際に引いた値を返す。
-	        sender_free_balance = sender_free_balance.checked_sub(&payment)
-	        	.ok_or("User does not have enough funds to play the game")?;
+            // sender が賭け金を持っているかをチェック。OKなら実際に引いた値を返す。
+            sender_free_balance = sender_free_balance.checked_sub(&payment)
+                .ok_or("User does not have enough funds to play the game")?;
 
             if (<system::Module<T>>::random_seed(), &sender, nonce)
                 .using_encoded(<T as system::Trait>::Hashing::hash)
@@ -47,16 +47,16 @@ decl_module! {
             {
                 // sender が pot にある balance を総取り。
                 sender_free_balance = sender_free_balance.checked_add(&pot)
-                	.ok_or("Overflow when adding funds to user account")?;
-				pot = Zero::zero();
+                    .ok_or("Overflow when adding funds to user account")?;
+                pot = Zero::zero();
             }
 
-			// pot に掛け金を加える。
-			pot = pot.checked_add(&payment)
-				.ok_or("Overflow when adding funds to pot")?;
+            // pot に掛け金を加える。
+            pot = pot.checked_add(&payment)
+                .ok_or("Overflow when adding funds to pot")?;
 
-        	// nonce をインクリメント(オーバーフロー時に 0 に戻る)
-        	nonce = nonce.wrapping_add(1);
+            // nonce をインクリメント(オーバーフロー時に 0 に戻る)
+            nonce = nonce.wrapping_add(1);
 
             // sender に対して最終結果の balance をセットする。
             <balances::Module<T>>::set_free_balance(&sender, sender_free_balance);
@@ -166,12 +166,12 @@ mod tests {
             }
             println!("pot: {}", Demo::pot());
 
-            assert_eq!(Demo::payment(),Some(100));
-            assert_eq!(Demo::nonce(),1);
+            assert_eq!(Demo::payment(), Some(100));
+            assert_eq!(Demo::nonce(), 1);
             // 1 play 後、pot には 100 溜まっている
             match Demo::pot() {
-                100 => assert_eq!(<balances::Module<Test>>::free_balance(&1), 1000000+100),
-                200 => assert_eq!(<balances::Module<Test>>::free_balance(&1), 1000000-100),
+                100 => assert_eq!(<balances::Module<Test>>::free_balance(&1), 1000000 + 100),
+                200 => assert_eq!(<balances::Module<Test>>::free_balance(&1), 1000000 - 100),
                 v => assert!(false, "Unexpected pot {}", v),
             }
         });
