@@ -180,6 +180,23 @@ impl sudo::Trait for Runtime {
 impl demo::Trait for Runtime {}
 
 construct_runtime!(
+    pub enum Runtime with Log(InternalLog: DigestItem<Hash, Ed25519AuthorityId>) where
+        Block = Block,
+        NodeBlock = opaque::Block,
+        UncheckedExtrinsic = UncheckedExtrinsic
+    {
+        System: system::{default, Log(ChangesTrieRoot)},
+        Timestamp: timestamp::{Module, Call, Storage, Config<T>, Inherent},
+        Consensus: consensus::{Module, Call, Storage, Config<T>, Log(AuthoritiesChange), Inherent},
+        Aura: aura::{Module},
+        Indices: indices,
+        Balances: balances,
+        Sudo: sudo,
+        Satemodule: satemodule::{Module, Call, Storage, Event<T>},
+    }
+);
+
+construct_runtime!(
 	pub enum Runtime with Log(InternalLog: DigestItem<Hash, Ed25519AuthorityId>) where
 		Block = Block,
 		NodeBlock = opaque::Block,
